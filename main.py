@@ -15,13 +15,7 @@ def main(argv):
             print("Arg[" + str(i) + "]: " + sys.argv[i])
     for i in range(1,total):
         hostname = sys.argv[i]
-
-        hostname = "192.168.2.341" #example
-
-        if ping(hostname):
-            print(hostname, 'is up!')
-        else:
-            print(hostname, 'is down')
+        logic(hostname)
 
     # Atlernatively, get the list of hosts from a file
     filename = 'list_of_hosts'
@@ -29,10 +23,18 @@ def main(argv):
         with open(filename, 'r') as file:
             for line in file:
                 line = line.strip()
-                print(line)
+                # print(line)
+                logic(line)
 
     print("Done.")
     return
+
+# TODO: need a better function name than "logic"...
+def logic(hostname):
+    if ping(hostname):
+        print(hostname, 'is up!')
+    else:
+        print(hostname, 'is down.')
 
 def ping(hostname):
     """
