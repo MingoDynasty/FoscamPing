@@ -16,12 +16,12 @@ def main(argv):
     for i in range(1,total):
         hostname = sys.argv[i]
 
-        hostname = "google.com" #example
+        hostname = "192.168.2.341" #example
 
         if ping(hostname):
-            print(hostname, 'is uppp!')
+            print(hostname, 'is up!')
         else:
-            print(hostname, 'is downnn!')
+            print(hostname, 'is down')
 
     # Atlernatively, get the list of hosts from a file
     filename = 'list_of_hosts'
@@ -41,21 +41,14 @@ def ping(hostname):
     :return: true on successful ping, else false.
     """
     print("Pinging hostname: " + hostname)
-
-    response = os.system("ping -n 1 " + hostname)
+    cmd = "ping -n 1 " + hostname
 
     try:
-        # subprocess.check_output("ping -n 1 " + hostname,
-        #                         stderr=subprocess.STDOUT,
-        #                         shell=True)
-        subprocess.run("ping -n 1 " + hostname, check=True, stdout=subprocess.PIPE).stdout
+        subprocess.check_output(cmd,stderr=subprocess.STDOUT,shell=True)
+        return True # if we make it here, then the command succeeded
 
-        # if we make it here, then the command succeeded
-        return True
-
+    # exception is thrown on non zero exits, so this must mean the command failed
     except subprocess.CalledProcessError as e:
-
-        # exception is thrown on non zero exits, so this must mean the command failed
         return False
 
 if __name__ == '__main__':
