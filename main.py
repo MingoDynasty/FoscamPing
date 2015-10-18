@@ -3,11 +3,12 @@
 =========================================================================="""
 import sys  # Provides access to command line arguments.
 import os  # Provides access to operating system interfaces.
-import subprocess  # Provides ability to spawn new processes.
 import logging  # Provides access to logging api.
 import logging.config  # Provides access to logging configuration file.
-import cx_Oracle
+
 from config import Configuration
+from PingController import PingController
+from DatabaseController import DatabaseController
 
 
 class Controller:
@@ -31,9 +32,8 @@ class Controller:
         config.loadConfiguration("database.conf")
 
         # Establish a database connection
-        self.logger.debug("Connecting to database...")
-        db = cx_Oracle.connect(config.getDbConnectString())
-        self.logger.info("Connected to host: " + config.getDbHost())
+        databaseController = DatabaseController()
+        databaseController.connect(config.getDbConnectString())
 
         for i in range(1, total):
             hostname = argv[i]
@@ -53,28 +53,11 @@ class Controller:
 
     # TODO: need a better function name than "logic"...
     def logic(self, hostname):
-        if self.ping(hostname):
+        pingController = PingController()
+        if pingController.ping(hostname):
             self.logger.debug(hostname + ' is up!')
         else:
             self.logger.debug(hostname + ' is down.')
-
-    def ping(self, hostname):
-        """
-        Ping a host. Note that this implementation may or may not work on non-Windows operating systems.
-        :param hostname: hostname to ping
-        :return: true on successful ping, else false.
-        """
-        self.logger.debug("Pinging hostname: " + hostname)
-        cmd = "ping -n 1 " + hostname
-
-        try:
-            subprocess.check_output(cmd, stderr=subprocess.STDOUT, shell=True)
-            return True  # if we make it here, then the command succeeded
-
-        # exception is thrown on non zero exits, so this must mean the command failed
-        except subprocess.CalledProcessError as e:
-            # TODO: may want to return e object or something
-            return False
 
 
 if __name__ == "__main__":
