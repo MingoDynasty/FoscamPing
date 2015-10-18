@@ -1,6 +1,6 @@
+import logging  # Provides access to logging api.
 import sys
 import cx_Oracle
-# from ConfigParser import SafeConfigParser
 import configparser
 
 
@@ -22,16 +22,19 @@ def newConfiguration(configfile):
         newConfig.write(configfile)
 
 
-class Configuration:
+class ConfigController:
     def __init__(self):
         # self.config = SafeConfigParser()
+        self.logger = logging.getLogger(__name__)
         self.config = configparser.ConfigParser()
 
     def __del__(self):
         return
 
     def loadConfiguration(self, configfile):
+        self.logger.debug("Loading config file: " + configfile)
         self.config.read(configfile)
+        self.logger.info("Loaded config file: " + configfile)
 
     def getDbConnectString(self):
         connectString = "%s/%s@%s:%s/%s" % (
@@ -66,7 +69,7 @@ class Configuration:
 if __name__ == "__main__":
 
     if len(sys.argv) > 1:
-        config = Configuration()
+        config = ConfigController()
         newConfiguration(sys.argv[1])
     else:
         print("You must specify a filename to create a new configuration file.")

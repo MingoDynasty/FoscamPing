@@ -6,7 +6,7 @@ import os  # Provides access to operating system interfaces.
 import logging  # Provides access to logging api.
 import logging.config  # Provides access to logging configuration file.
 
-from config import Configuration
+from ConfigController import ConfigController
 from PingController import PingController
 from DatabaseController import DatabaseController
 
@@ -28,12 +28,12 @@ class Controller:
                 self.logger.debug("Arg[" + str(i) + "]: " + argv[i])
 
         # Get the configuration parameters
-        config = Configuration()
-        config.loadConfiguration("database.conf")
+        configController = ConfigController()
+        configController.loadConfiguration("database.conf")
 
         # Establish a database connection
         databaseController = DatabaseController()
-        databaseController.connect(config.getDbConnectString())
+        databaseController.connect(configController.getDbConnectString())
 
         for i in range(1, total):
             hostname = argv[i]
