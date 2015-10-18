@@ -1,12 +1,13 @@
 import logging  # Provides access to logging api.
 import cx_Oracle
-from collections import namedtuple
+from NamedTuples import Device
 
 
 class DatabaseController:
-    def __init__(self):
+    def __init__(self, willCommit):
         self.logger = logging.getLogger(__name__)
         self.db = None
+        self.willCommit = willCommit
         return
 
     def __del__(self):
@@ -22,8 +23,16 @@ class DatabaseController:
 
     def disconnect(self):
         if self.db:
+            if self.willCommit:
+                self.logger.debug("Committing changes...")
+                self.db.commit()
+            else:
+                self.logger.debug("Rolling back changes...")
+                self.db.rollback()
+
             self.logger.debug("Closing database...")
             self.db.close()
+            self.db = None
             self.logger.info("Database closed.")
         return
 
@@ -36,7 +45,6 @@ class DatabaseController:
         cursor = self.db.cursor()
         cursor.execute("SELECT device_id, hostname, is_active FROM DEVICES")
 
-        Device = namedtuple('Device', 'device_id, hostname, is_active')
         devices = {}
 
         totalRows = 0
@@ -52,8 +60,9 @@ class DatabaseController:
 
     def addDevice(self, deviceTuple):
         """
-        Add Device to DEVICES table.
-        :return: none
+        Add a Device to DEVICES table.
+        :param deviceTuple: device to add.
+        :return:
         """
         cursor = self.db.cursor()
 
