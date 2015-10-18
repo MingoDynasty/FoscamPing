@@ -27,7 +27,7 @@ class PingController:
             self.logger.info("Successfully pinged: " + hostname)
             return pingResult  # if we make it here, then the command succeeded
 
-        # exception is thrown on non zero exits, so this must mean the command failed
+        # exception is thrown on non-zero exits, so this must mean the command failed
         except subprocess.CalledProcessError as e:
             # TODO: may want to return e object or something
             self.logger.warning("Failed to ping: " + hostname)

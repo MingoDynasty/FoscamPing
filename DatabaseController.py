@@ -1,6 +1,6 @@
 import logging  # Provides access to logging api.
 import cx_Oracle
-from NamedTuples import Device
+from NamedTuples import Device, PingResult
 
 
 class DatabaseController:
@@ -101,5 +101,29 @@ class DatabaseController:
         cursor.close()
         self.logger.debug("Inserted PingResult: " + str(pingResultTuple))
         return
+
+    def getLatestPingResults(self):
+            """
+            Get a latest ping result for each device.
+            :return: list of Ping Result tuples.
+            """
+            self.logger.debug("Loading most recent ping results...")
+            cursor = self.db.cursor()
+            cursor.execute("Select p.device_id, p.date_pinged, packets_sent, packets_received, packets_lost, minimum_ping, maximum_ping, average_ping, is_success "
+                           "From ping_results p Inner Join (Select device_id, max(DATE_PINGED) as DATE_PINGED From ping_results Group By device_id) q "
+                           "On p.device_id = q.device_id And p.DATE_PINGED = q.DATE_PINGED")
+
+            pingResults = {}
+
+            totalRows = 0
+            for row in cursor:
+                totalRows += 1
+                pingResult = PingResult(row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7], row[8])
+                pingResults[row[0]] = pingResult
+                self.logger.debug("Found Ping Result: " + str(pingResult))
+
+            self.logger.info("Found " + str(totalRows) + " device ping results.")
+            cursor.close()
+            return pingResults
 
 # end DatabaseController

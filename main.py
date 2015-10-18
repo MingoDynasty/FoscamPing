@@ -83,7 +83,17 @@ class Controller:
     # TODO: need a better function name than "logic"...
     def logic(self, hostnames):
 
-        failedPingResults = []  # list of ping result tuples
+        # list of ping result tuples for failed pings
+        failedPingResults = []
+
+        # list of ping result tuples for successful pings
+        successfulPingResults = []
+
+        # list of ping result tuples from the database
+        latestPingResults = self.databaseController.getLatestPingResults()
+
+        # list of ping result tuples for successful pings that were previously failures
+        failsuccessPingResults = []
 
         for hostname in hostnames:
             if hostname not in self.devices:
@@ -95,14 +105,22 @@ class Controller:
             deviceId = self.devices[hostname].device_id
 
             pingResult = self.pingController.ping(hostname, deviceId)
-            if not pingResult:
+            if pingResult:
+                successfulPingResults.append(pingResult)
+            else:
                 # New ping result with is_success=False
                 pingResult = PingResult(device_id=deviceId, is_success=False)
+                failedPingResults.append(pingResult)
 
             self.databaseController.addPingResult(pingResult)
-            failedPingResults.append(pingResult)
 
-        if failedPingResults:
+        for pingResult in successfulPingResults:
+            prevIsSuccess = latestPingResults[pingResult.device_id].is_success
+            if prevIsSuccess is not 1:
+                self.logger.debug("Device " + str(pingResult.device_id) + " was previously down but is now up.")
+                failsuccessPingResults.append(pingResult)
+
+        if failedPingResults or failsuccessPingResults:
             # Send an email
             if not self.emailDict['enabled']:
                 self.logger.debug("Email is disabled. Skipping email...")
@@ -115,6 +133,11 @@ class Controller:
                 for failedPingResult in failedPingResults:
                     device = self.getDeviceById(failedPingResult.device_id)
                     text += timeNow + ' - Failed to ping: ' + device.hostname + "\n"
+
+                for pingResult in failsuccessPingResults:
+                    device = self.getDeviceById(pingResult.device_id)
+                    text += timeNow + ' - Previously down but is now up: ' + device.hostname + "\n"
+
                 self.emailController.sendEmail(self.emailDict['send_to'], subject, text)
 
         return
