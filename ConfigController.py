@@ -70,6 +70,9 @@ class ConfigController:
     #
     # Email Section
     #
+    def getEmailEnabled(self):
+        return self.config.get('Email', 'enabled').lower() == 'true'
+
     def getEmailUsername(self):
         return self.config.get('Email', 'username')
 
@@ -89,7 +92,8 @@ class ConfigController:
         return self.config.get('Email', 'send_to')
 
     def getEmailDict(self):
-        emailDict = {'username': self.getEmailUsername(), 'password': self.getEmailPassword(),
+        emailDict = {'enabled': self.getEmailEnabled(),
+                     'username': self.getEmailUsername(), 'password': self.getEmailPassword(),
                      'server': self.getEmailServer(), 'port': self.getEmailPort(),
                      'sender_name': self.getEmailSenderName(),
                      'send_to': self.getEmailSendTo()}

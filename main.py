@@ -93,10 +93,16 @@ class Controller:
             pingResult = PingResult(device_id=deviceId, is_success=False)
 
             # Send an email
-            timeNow = time.strftime('%Y-%m-%d %H:%M:%S')
-            subject = 'FoscamPing Email Controller'
-            text = timeNow + ' - Failed to ping: ' + hostname
-            self.emailController.sendEmail(self.emailDict['send_to'], subject, text)
+            if not self.emailDict['enabled']:
+                self.logger.debug("Email is disabled. Skipping email...")
+            else:
+                timeNow = time.strftime('%Y-%m-%d %H:%M:%S')
+                subject = 'FoscamPing Email Controller'
+                text = timeNow + ' - Failed to ping: ' + hostname
+
+                self.logger.debug("Email is enabled: " + str(self.emailDict['enabled']))
+                # self.emailController.sendEmail(self.emailDict['send_to'], subject, text)
+
 
         self.databaseController.addPingResult(pingResult)
         return
