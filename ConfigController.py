@@ -2,6 +2,7 @@ import logging  # Provides access to logging api.
 import sys
 import cx_Oracle
 import configparser
+from NamedTuples import EmailConf
 
 
 def newConfiguration(configfile):
@@ -98,6 +99,11 @@ class ConfigController:
                      'sender_name': self.getEmailSenderName(),
                      'send_to': self.getEmailSendTo()}
         return emailDict
+
+    def getEmailTuple(self):
+        emailTuple = EmailConf(self.getEmailEnabled(), self.getEmailUsername(), self.getEmailPassword(), self.getEmailServer(), self.getEmailPort(), self.getEmailSenderName(), self.getEmailSendTo())
+        return emailTuple
+
 
 # end class Configuration ######
 

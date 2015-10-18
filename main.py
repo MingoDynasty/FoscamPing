@@ -23,7 +23,7 @@ class Controller:
         self.databaseController = None
         self.pingController = None
         self.emailController = None
-        self.emailDict = {}
+        self.emailConf = None
         return
 
     def __del__(self):
@@ -55,8 +55,8 @@ class Controller:
         self.pingController = PingController()
 
         # Setup email controller
-        self.emailDict = self.configController.getEmailDict()
-        self.emailController = EmailController(self.emailDict['username'], self.emailDict['password'], self.emailDict['server'], self.emailDict['port'], self.emailDict['sender_name'])
+        self.emailConf = self.configController.getEmailTuple()
+        self.emailController = EmailController(self.emailConf.username, self.emailConf.password, self.emailConf.server, self.emailConf.port, self.emailConf.sender_name)
 
         hostnames = []
 
@@ -122,10 +122,10 @@ class Controller:
 
         if failedPingResults or failsuccessPingResults:
             # Send an email
-            if not self.emailDict['enabled']:
+            if not self.emailConf.enabled:
                 self.logger.debug("Email is disabled. Skipping email...")
             else:
-                self.logger.debug("Email is enabled: " + str(self.emailDict['enabled']))
+                self.logger.debug("Email is enabled: " + str(self.emailConf.enabled))
                 subject = 'FoscamPing Email Controller'
                 timeNow = time.strftime('%Y-%m-%d %H:%M:%S')
                 text = ''
@@ -138,7 +138,7 @@ class Controller:
                     device = self.getDeviceById(pingResult.device_id)
                     text += timeNow + ' - Previously down but is now up: ' + device.hostname + "\n"
 
-                self.emailController.sendEmail(self.emailDict['send_to'], subject, text)
+                self.emailController.sendEmail(self.emailConf.send_to, subject, text)
 
         return
 
