@@ -36,8 +36,7 @@ class Controller:
         # 1. Argument parsing
         #
         self.logger.debug("The total numbers of args passed to the script: %d " % len(argv))
-        for i in range(0, len(argv)):
-            self.logger.debug("Arg[" + str(i) + "]: " + argv[i])
+        self.logger.debug("Args: " + str(argv))
 
         # TODO: flesh out argument parsing and help, -h
         # Parse command line arguments
@@ -53,16 +52,13 @@ class Controller:
         parser.add_argument('-f', '--file', help='file containing list of hosts to ping')
         parser.add_argument('-c', '--conf', default='app.conf', help='application config file to use (default: %(default)s)')
         args = parser.parse_args()
-        print(args)
-        print(args.host)
-        # return
+        self.logger.debug("Parsed args: " + str(args))
 
         if not os.path.isfile(args.conf):
             self.logger.error(args.conf + " not found.")
             return
 
         hostnames = []
-
         hostnames.append(args.host)
 
         # Also get the list of hosts from a file
@@ -74,7 +70,8 @@ class Controller:
                 with open(args.file, 'r') as file:
                     for line in file:
                         line = line.strip()
-                        hostnames.append(line)
+                        if line:
+                            hostnames.append(line)
 
         #
         # 2. Controller setup
@@ -127,7 +124,6 @@ class Controller:
                 device = Device(None, hostname, 1)
                 newDevice = self.databaseController.addDevice(device)
                 self.devices[hostname] = newDevice
-                # self.devices[hostname] = device
 
             deviceId = self.devices[hostname].device_id
 
@@ -177,6 +173,9 @@ class Controller:
         self.logger.error("Device id not found" + str(device_id))
         return None
 
+#
+# TODO: also log to file... specified in logging.conf?
+#
 if __name__ == "__main__":
     log_format = "%(asctime)-15s - %(levelname)s - %(message)s"
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=log_format)

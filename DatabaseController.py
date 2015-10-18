@@ -62,7 +62,7 @@ class DatabaseController:
         """
         Add a Device to DEVICES table.
         :param deviceTuple: device to add.
-        :return:
+        :return: newly created Device tuple.
         """
         cursor = self.db.cursor()
 
@@ -71,7 +71,6 @@ class DatabaseController:
         cursor.prepare("INSERT INTO DEVICES (hostname, is_active) "
                        "VALUES (:hostname, 1) returning device_id into :x")
         cursor.execute(None, hostname=deviceTuple.hostname, x=newDeviceId)
-        print(int(newDeviceId.getvalue()))
         cursor.close()
 
         device = Device(int(newDeviceId.getvalue()), deviceTuple.hostname, deviceTuple.is_active)

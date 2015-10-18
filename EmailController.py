@@ -15,7 +15,7 @@ class EmailController:
     def __del__(self):
         return
 
-    def sendEmail(self, to, subject, text):
+    def sendEmail(self, send_to, subject, text):
 
         self.logger.debug("Trying smtp...")
         server = smtplib.SMTP(self.server, self.port)
@@ -29,15 +29,14 @@ class EmailController:
         self.logger.debug("Trying login...")
         server.login(self.username, self.password)
 
-        body = '\r\n'.join(['To: %s' % to,
+        body = '\r\n'.join(['To: %s' % send_to,
                             'From: %s' % self.sender_name,
                             'Subject: %s' % subject,
                             '', text])
 
         try:
             self.logger.debug("Attempting to send....")
-            # server.sendmail(self.username, [to], text)
-            server.sendmail(self.username, [to], body)
+            server.sendmail(self.username, [send_to], body)
             self.logger.debug("Successfully sent.")
         except smtplib.SMTPException:
             self.logger.error("Failed to send.")
