@@ -6,6 +6,7 @@ import os  # Provides access to operating system interfaces.
 import logging  # Provides access to logging api.
 import logging.config  # Provides access to logging configuration file.
 import time  # Various time-related functions.
+import argparse
 
 from ConfigController import ConfigController
 from PingController import PingController
@@ -31,20 +32,57 @@ class Controller:
 
     def main(self, argv):
 
-        # Very basic arg parsing...
-        total = len(argv)
-        self.logger.debug("The total numbers of args passed to the script: %d " % total)
-        for i in range(0, total):
+        #
+        # 1. Argument parsing
+        #
+        self.logger.debug("The total numbers of args passed to the script: %d " % len(argv))
+        for i in range(0, len(argv)):
             self.logger.debug("Arg[" + str(i) + "]: " + argv[i])
 
-        conf_filename = "app.conf"
-        if not os.path.isfile(conf_filename):
-            self.logger.error(conf_filename + " not found.")
+        # TODO: flesh out argument parsing and help, -h
+        # Parse command line arguments
+        sDescription = "no description yet"
+
+        sEpilog = "Returns exit code 0 on success, non-zero on error.\n\n" \
+                  "Use app.conf to change script configuration.\n" \
+                  "Use logging.conf to change logging information."
+
+        parser = argparse.ArgumentParser(formatter_class=argparse.RawDescriptionHelpFormatter, description=sDescription,
+                                         epilog=sEpilog)
+        parser.add_argument('-host', help='hostname to ping')
+        parser.add_argument('-f', '--file', help='file containing list of hosts to ping')
+        parser.add_argument('-c', '--conf', default='app.conf', help='application config file to use (default: %(default)s)')
+        args = parser.parse_args()
+        print(args)
+        print(args.host)
+        # return
+
+        if not os.path.isfile(args.conf):
+            self.logger.error(args.conf + " not found.")
             return
+
+        hostnames = []
+
+        hostnames.append(args.host)
+
+        # Also get the list of hosts from a file
+        if args.file:
+            if not os.path.isfile(args.file):
+                self.logger.error("File not found: " + args.file)
+                return
+            else:
+                with open(args.file, 'r') as file:
+                    for line in file:
+                        line = line.strip()
+                        hostnames.append(line)
+
+        #
+        # 2. Controller setup
+        #
 
         # Get the configuration parameters
         self.configController = ConfigController()
-        self.configController.loadConfiguration(conf_filename)
+        self.configController.loadConfiguration(args.conf)
 
         # Establish a database connection
         self.databaseController = DatabaseController(True)
@@ -58,21 +96,9 @@ class Controller:
         self.emailConf = self.configController.getEmailTuple()
         self.emailController = EmailController(self.emailConf.username, self.emailConf.password, self.emailConf.server, self.emailConf.port, self.emailConf.sender_name)
 
-        hostnames = []
-
-        # Iterate over all args
-        for i in range(1, total):
-            hostname = argv[i]
-            hostnames.append(hostname)
-
-        # Also get the list of hosts from a file
-        filename = 'list_of_hosts'
-        if os.path.isfile(filename):
-            with open(filename, 'r') as file:
-                for line in file:
-                    line = line.strip()
-                    hostnames.append(line)
-
+        #
+        # 3. Script main run
+        #
         # Finally we use the list of hostnames
         self.logic(hostnames)
 
@@ -99,8 +125,9 @@ class Controller:
             if hostname not in self.devices:
                 self.logger.debug("Found new device: " + hostname)
                 device = Device(None, hostname, 1)
-                self.databaseController.addDevice(device)
-                self.devices[hostname] = device
+                newDevice = self.databaseController.addDevice(device)
+                self.devices[hostname] = newDevice
+                # self.devices[hostname] = device
 
             deviceId = self.devices[hostname].device_id
 

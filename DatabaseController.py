@@ -67,14 +67,17 @@ class DatabaseController:
         cursor = self.db.cursor()
 
         self.logger.debug("Inserting Device: " + str(deviceTuple))
-
+        newDeviceId=cursor.var(cx_Oracle.NUMBER)
         cursor.prepare("INSERT INTO DEVICES (hostname, is_active) "
-                       "VALUES (:hostname, 1)")
-        cursor.execute(None, hostname=deviceTuple.hostname)
-
+                       "VALUES (:hostname, 1) returning device_id into :x")
+        cursor.execute(None, hostname=deviceTuple.hostname, x=newDeviceId)
+        print(int(newDeviceId.getvalue()))
         cursor.close()
+
+        device = Device(int(newDeviceId.getvalue()), deviceTuple.hostname, deviceTuple.is_active)
+        self.logger.debug("Inserted Device: " + str(device))
         self.logger.info("Inserted Device: " + deviceTuple.hostname)
-        return
+        return device
 
     def addPingResult(self, pingResultTuple):
         """
