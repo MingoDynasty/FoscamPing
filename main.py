@@ -14,6 +14,8 @@ from DatabaseController import DatabaseController
 class Controller:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        self.devices = {}
+        return
 
     def __del__(self):
         return
@@ -34,6 +36,7 @@ class Controller:
         # Establish a database connection
         databaseController = DatabaseController()
         databaseController.connect(configController.getDbConnectString())
+        self.devices = databaseController.getDevices()
 
         for i in range(1, total):
             hostname = argv[i]
@@ -54,10 +57,15 @@ class Controller:
     # TODO: need a better function name than "logic"...
     def logic(self, hostname):
         pingController = PingController()
-        if pingController.ping(hostname):
-            self.logger.debug(hostname + ' is up!')
-        else:
-            self.logger.debug(hostname + ' is down.')
+
+        if hostname not in self.devices:
+            self.logger.debug("Found new device: " + hostname)
+
+        # pingResult = pingController.ping(hostname)
+        # if pingController.ping(hostname):
+            # self.logger.debug(hostname + ' is up!')
+        # else:
+        #     self.logger.debug(hostname + ' is down.')
 
 
 if __name__ == "__main__":

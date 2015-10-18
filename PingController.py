@@ -5,6 +5,7 @@ import subprocess  # Provides ability to spawn new processes.
 class PingController:
     def __init__(self):
         self.logger = logging.getLogger(__name__)
+        return
 
     def __del__(self):
         return

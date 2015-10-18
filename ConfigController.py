@@ -27,6 +27,7 @@ class ConfigController:
         # self.config = SafeConfigParser()
         self.logger = logging.getLogger(__name__)
         self.config = configparser.ConfigParser()
+        return
 
     def __del__(self):
         return
