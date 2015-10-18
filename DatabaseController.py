@@ -75,3 +75,29 @@ class DatabaseController:
         cursor.close()
         self.logger.info("Inserted Device: " + deviceTuple.hostname)
         return
+
+    def addPingResult(self, pingResultTuple):
+        """
+        Add a PingResult to PING_RESULTS table.
+        :param pingResultTuple: ping result to add.
+        :return:
+        """
+        cursor = self.db.cursor()
+
+        self.logger.debug("Inserting PingResult: " + str(pingResultTuple))
+
+        cursor.prepare(
+            "INSERT INTO PING_RESULTS (device_id, packets_sent, packets_received, packets_lost, minimum_ping, maximum_ping, average_ping, is_success) "
+            "VALUES (:device_id, :packets_sent, :packets_received, :packets_lost, :minimum_ping, :maximum_ping, :average_ping, :is_success)")
+        cursor.execute(None, device_id=pingResultTuple.device_id,
+                       packets_sent=pingResultTuple.packets_sent,
+                       packets_received=pingResultTuple.packets_received,
+                       packets_lost=pingResultTuple.packets_lost,
+                       minimum_ping=pingResultTuple.minimum_ping,
+                       maximum_ping=pingResultTuple.maximum_ping,
+                       average_ping=pingResultTuple.average_ping,
+                       is_success=pingResultTuple.is_success)
+
+        cursor.close()
+        self.logger.debug("Inserted PingResult: " + str(pingResultTuple))
+        return

@@ -10,7 +10,8 @@ from ConfigController import ConfigController
 from PingController import PingController
 from DatabaseController import DatabaseController
 
-from NamedTuples import Device
+from NamedTuples import Device, PingResult
+
 
 class Controller:
     def __init__(self):
@@ -18,7 +19,7 @@ class Controller:
         self.devices = {}
         self.configController = None
         self.databaseController = None
-        self.PingController = None
+        self.pingController = None
         return
 
     def __del__(self):
@@ -69,13 +70,16 @@ class Controller:
             self.logger.debug("Found new device: " + hostname)
             device = Device(None, hostname, 1)
             self.databaseController.addDevice(device)
+            self.devices[hostname] = device
 
-        # pingResult = self.pingController.ping(hostname)
-        # if pingController.ping(hostname):
-            # self.logger.debug(hostname + ' is up!')
-        # else:
-        #     self.logger.debug(hostname + ' is down.')
+        deviceId = self.devices[hostname].device_id
 
+        pingResult = self.pingController.ping(hostname, deviceId)
+        if not pingResult:
+            pingResult = PingResult(device_id=deviceId, is_success=False)
+
+        self.databaseController.addPingResult(pingResult)
+        return
 
 if __name__ == "__main__":
     log_format = "%(asctime)-15s - %(levelname)s - %(message)s"
