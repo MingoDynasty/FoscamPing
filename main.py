@@ -58,54 +58,74 @@ class Controller:
         self.emailDict = self.configController.getEmailDict()
         self.emailController = EmailController(self.emailDict['username'], self.emailDict['password'], self.emailDict['server'], self.emailDict['port'], self.emailDict['sender_name'])
 
+        hostnames = []
+
         # Iterate over all args
         for i in range(1, total):
             hostname = argv[i]
-            self.logic(hostname)
+            hostnames.append(hostname)
 
-        # Alternatively, get the list of hosts from a file
+        # Also get the list of hosts from a file
         filename = 'list_of_hosts'
         if os.path.isfile(filename):
             with open(filename, 'r') as file:
                 for line in file:
                     line = line.strip()
-                    # self.logger.debug(line)
-                    self.logic(line)
+                    hostnames.append(line)
+
+        # Finally we use the list of hostnames
+        self.logic(hostnames)
 
         self.databaseController.disconnect()
 
         return 0
 
     # TODO: need a better function name than "logic"...
-    def logic(self, hostname):
+    def logic(self, hostnames):
 
-        if hostname not in self.devices:
-            self.logger.debug("Found new device: " + hostname)
-            device = Device(None, hostname, 1)
-            self.databaseController.addDevice(device)
-            self.devices[hostname] = device
+        failedPingResults = []  # list of ping result tuples
 
-        deviceId = self.devices[hostname].device_id
+        for hostname in hostnames:
+            if hostname not in self.devices:
+                self.logger.debug("Found new device: " + hostname)
+                device = Device(None, hostname, 1)
+                self.databaseController.addDevice(device)
+                self.devices[hostname] = device
 
-        pingResult = self.pingController.ping(hostname, deviceId)
-        if not pingResult:
-            # New ping result with is_success=False
-            pingResult = PingResult(device_id=deviceId, is_success=False)
+            deviceId = self.devices[hostname].device_id
 
+            pingResult = self.pingController.ping(hostname, deviceId)
+            if not pingResult:
+                # New ping result with is_success=False
+                pingResult = PingResult(device_id=deviceId, is_success=False)
+
+            self.databaseController.addPingResult(pingResult)
+            failedPingResults.append(pingResult)
+
+        if failedPingResults:
             # Send an email
             if not self.emailDict['enabled']:
                 self.logger.debug("Email is disabled. Skipping email...")
             else:
-                timeNow = time.strftime('%Y-%m-%d %H:%M:%S')
-                subject = 'FoscamPing Email Controller'
-                text = timeNow + ' - Failed to ping: ' + hostname
-
                 self.logger.debug("Email is enabled: " + str(self.emailDict['enabled']))
-                # self.emailController.sendEmail(self.emailDict['send_to'], subject, text)
+                subject = 'FoscamPing Email Controller'
+                timeNow = time.strftime('%Y-%m-%d %H:%M:%S')
+                text = ''
 
+                for failedPingResult in failedPingResults:
+                    device = self.getDeviceById(failedPingResult.device_id)
+                    text += timeNow + ' - Failed to ping: ' + device.hostname + "\n"
+                self.emailController.sendEmail(self.emailDict['send_to'], subject, text)
 
-        self.databaseController.addPingResult(pingResult)
         return
+
+    def getDeviceById(self, device_id):
+        for hostname in self.devices:
+            # if device.device_id == device_id:
+            if self.devices[hostname].device_id == device_id:
+                return self.devices[hostname]
+        self.logger.error("Device id not found" + str(device_id))
+        return None
 
 if __name__ == "__main__":
     log_format = "%(asctime)-15s - %(levelname)s - %(message)s"
