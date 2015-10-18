@@ -32,3 +32,5 @@ class PingController:
             # TODO: may want to return e object or something
             self.logger.warning("Failed to ping: " + hostname)
             return None
+
+# end PingController

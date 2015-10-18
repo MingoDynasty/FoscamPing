@@ -101,3 +101,5 @@ class DatabaseController:
         cursor.close()
         self.logger.debug("Inserted PingResult: " + str(pingResultTuple))
         return
+
+# end DatabaseController

@@ -37,6 +37,9 @@ class ConfigController:
         self.config.read(configfile)
         self.logger.info("Loaded config file: " + configfile)
 
+    #
+    # Database Section
+    #
     def getDbConnectString(self):
         connectString = "%s/%s@%s:%s/%s" % (
             self.getDbUser(), self.getDbPassword(), self.getDbHost(), self.getDbPort(), self.getDbSid())
@@ -64,6 +67,33 @@ class ConfigController:
     def getDefaultParam(self, param):
         return self.config.get('Defaults', param)
 
+    #
+    # Email Section
+    #
+    def getEmailUsername(self):
+        return self.config.get('Email', 'username')
+
+    def getEmailPassword(self):
+        return self.config.get('Email', 'password')
+
+    def getEmailServer(self):
+        return self.config.get('Email', 'server')
+
+    def getEmailPort(self):
+        return self.config.get('Email', 'port')
+
+    def getEmailSenderName(self):
+        return self.config.get('Email', 'sender_name')
+
+    def getEmailSendTo(self):
+        return self.config.get('Email', 'send_to')
+
+    def getEmailDict(self):
+        emailDict = {'username': self.getEmailUsername(), 'password': self.getEmailPassword(),
+                     'server': self.getEmailServer(), 'port': self.getEmailPort(),
+                     'sender_name': self.getEmailSenderName(),
+                     'send_to': self.getEmailSendTo()}
+        return emailDict
 
 # end class Configuration ######
 

@@ -5,10 +5,12 @@ import sys  # Provides access to command line arguments.
 import os  # Provides access to operating system interfaces.
 import logging  # Provides access to logging api.
 import logging.config  # Provides access to logging configuration file.
+import time  # Various time-related functions.
 
 from ConfigController import ConfigController
 from PingController import PingController
 from DatabaseController import DatabaseController
+from EmailController import EmailController
 
 from NamedTuples import Device, PingResult
 
@@ -20,6 +22,8 @@ class Controller:
         self.configController = None
         self.databaseController = None
         self.pingController = None
+        self.emailController = None
+        self.emailDict = {}
         return
 
     def __del__(self):
@@ -33,9 +37,14 @@ class Controller:
         for i in range(0, total):
             self.logger.debug("Arg[" + str(i) + "]: " + argv[i])
 
+        conf_filename = "app.conf"
+        if not os.path.isfile(conf_filename):
+            self.logger.error(conf_filename + " not found.")
+            return
+
         # Get the configuration parameters
         self.configController = ConfigController()
-        self.configController.loadConfiguration("database.conf")
+        self.configController.loadConfiguration(conf_filename)
 
         # Establish a database connection
         self.databaseController = DatabaseController(True)
@@ -44,6 +53,10 @@ class Controller:
 
         # Get a ping controller instance
         self.pingController = PingController()
+
+        # Setup email controller
+        self.emailDict = self.configController.getEmailDict()
+        self.emailController = EmailController(self.emailDict['username'], self.emailDict['password'], self.emailDict['server'], self.emailDict['port'], self.emailDict['sender_name'])
 
         # Iterate over all args
         for i in range(1, total):
@@ -76,7 +89,14 @@ class Controller:
 
         pingResult = self.pingController.ping(hostname, deviceId)
         if not pingResult:
+            # New ping result with is_success=False
             pingResult = PingResult(device_id=deviceId, is_success=False)
+
+            # Send an email
+            timeNow = time.strftime('%Y-%m-%d %H:%M:%S')
+            subject = 'FoscamPing Email Controller'
+            text = timeNow + ' - Failed to ping: ' + hostname
+            self.emailController.sendEmail(self.emailDict['send_to'], subject, text)
 
         self.databaseController.addPingResult(pingResult)
         return
