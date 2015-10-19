@@ -59,7 +59,8 @@ class Controller:
             return
 
         hostnames = []
-        hostnames.append(args.host)
+        if args.host:
+            hostnames.append(args.host)
 
         # Also get the list of hosts from a file
         if args.file:
@@ -106,6 +107,8 @@ class Controller:
     # TODO: need a better function name than "logic"...
     def logic(self, hostnames):
 
+        self.logger.debug("Hostnames: " + str(hostnames))
+
         # list of ping result tuples for failed pings
         failedPingResults = []
 
@@ -119,6 +122,7 @@ class Controller:
         failsuccessPingResults = []
 
         for hostname in hostnames:
+            # If this is a new device then add it to the database
             if hostname not in self.devices:
                 self.logger.debug("Found new device: " + hostname)
                 device = Device(None, hostname, 1)
@@ -137,11 +141,24 @@ class Controller:
 
             self.databaseController.addPingResult(pingResult)
 
+        # Check if this device was previously down but is now up
         for pingResult in successfulPingResults:
             prevIsSuccess = latestPingResults[pingResult.device_id].is_success
             if prevIsSuccess is not 1:
-                self.logger.debug("Device " + str(pingResult.device_id) + " was previously down but is now up.")
+                device = self.getDeviceById(pingResult.device_id)
+                self.logger.debug("Host '" + str(device.hostname) + "' was previously down but is now up.")
                 failsuccessPingResults.append(pingResult)
+
+        # Check if this device was previously down and is still down
+        # Copy failedPingResults into failedPingResultsCopy to avoid loop issues while deleting elements...
+        # TODO: probably a better way of doing this
+        failedPingResultsCopy = list(failedPingResults)
+        for pingResult in failedPingResultsCopy:
+            prevIsSuccess = latestPingResults[pingResult.device_id].is_success
+            if prevIsSuccess is not 1:
+                device = self.getDeviceById(pingResult.device_id)
+                self.logger.debug("Host '" + str(device.hostname) + "' was previously down and is still down.")
+                failedPingResults.remove(pingResult)
 
         if failedPingResults or failsuccessPingResults:
             # Send an email
@@ -173,9 +190,6 @@ class Controller:
         self.logger.error("Device id not found" + str(device_id))
         return None
 
-#
-# TODO: also log to file... specified in logging.conf?
-#
 if __name__ == "__main__":
     log_format = "%(asctime)-15s - %(levelname)s - %(message)s"
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=log_format)
