@@ -143,26 +143,27 @@ class Controller:
 
         # Check if this device was previously down but is now up
         for pingResult in successfulPingResults:
-            prevIsSuccess = latestPingResults[pingResult.device_id].is_success
-            if prevIsSuccess is not 1:
-                device = self.getDeviceById(pingResult.device_id)
-                self.logger.debug("Host '" + str(device.hostname) + "' was previously down but is now up.")
-                failsuccessPingResults.append(pingResult)
+            if pingResult.device_id in latestPingResults:
+                prevIsSuccess = latestPingResults[pingResult.device_id].is_success
+                if prevIsSuccess is not 1:
+                    device = self.getDeviceById(pingResult.device_id)
+                    self.logger.debug("Host '" + str(device.hostname) + "' was previously down but is now up.")
+                    failsuccessPingResults.append(pingResult)
 
         # Check if this device was previously down and is still down
         # Copy failedPingResults into failedPingResultsCopy to avoid loop issues while deleting elements...
         # TODO: probably a better way of doing this
         failedPingResultsCopy = list(failedPingResults)
         for pingResult in failedPingResultsCopy:
-            # TODO: if this is a new device then this will fail... debug required
-            prevIsSuccess = latestPingResults[pingResult.device_id].is_success
-            if prevIsSuccess is not 1:
-                device = self.getDeviceById(pingResult.device_id)
-                self.logger.debug("Host '" + str(device.hostname) + "' was previously down and is still down.")
-                failedPingResults.remove(pingResult)
+            if pingResult.device_id in latestPingResults:
+                prevIsSuccess = latestPingResults[pingResult.device_id].is_success
+                if prevIsSuccess is not 1:
+                    device = self.getDeviceById(pingResult.device_id)
+                    self.logger.debug("Host '" + str(device.hostname) + "' was previously down and is still down.")
+                    failedPingResults.remove(pingResult)
 
+        # Send an email
         if failedPingResults or failsuccessPingResults:
-            # Send an email
             if not self.emailConf.enabled:
                 self.logger.debug("Email is disabled. Skipping email...")
             else:
@@ -184,6 +185,11 @@ class Controller:
         return
 
     def getDeviceById(self, device_id):
+        """
+        Helper function to get a Device tuple by device_id
+        :param device_id: device_id to search for.
+        :return: Device tuple if found, else None.
+        """
         for hostname in self.devices:
             # if device.device_id == device_id:
             if self.devices[hostname].device_id == device_id:
