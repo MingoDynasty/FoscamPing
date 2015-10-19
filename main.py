@@ -198,9 +198,14 @@ class Controller:
         return None
 
 if __name__ == "__main__":
+    logfile = os.path.join(os.path.dirname(__file__), 'logging.conf')
+    if not os.path.isfile(logfile):
+        print(logfile + " not found.")
+        exit()
+
     log_format = "%(asctime)-15s - %(levelname)s - %(message)s"
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=log_format)
-    logging.config.fileConfig('logging.conf')
+    logging.config.fileConfig(logfile)
     logger = logging.getLogger(__name__)
 
     logger.info('Starting FoscamPing...')
