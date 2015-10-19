@@ -54,8 +54,9 @@ class Controller:
         args = parser.parse_args()
         self.logger.debug("Parsed args: " + str(args))
 
-        if not os.path.isfile(args.conf):
-            self.logger.error(args.conf + " not found.")
+        appConfFile = os.path.join(os.path.dirname(__file__), args.conf)
+        if not os.path.isfile(appConfFile):
+            self.logger.error(appConfFile + " not found.")
             return
 
         hostnames = []
@@ -80,7 +81,7 @@ class Controller:
 
         # Get the configuration parameters
         self.configController = ConfigController()
-        self.configController.loadConfiguration(args.conf)
+        self.configController.loadConfiguration(appConfFile)
 
         # Establish a database connection
         self.databaseController = DatabaseController(True)
@@ -198,14 +199,14 @@ class Controller:
         return None
 
 if __name__ == "__main__":
-    logfile = os.path.join(os.path.dirname(__file__), 'logging.conf')
-    if not os.path.isfile(logfile):
-        print(logfile + " not found.")
+    logConfFile = os.path.join(os.path.dirname(__file__), 'logging.conf')
+    if not os.path.isfile(logConfFile):
+        print(logConfFile + " not found.")
         exit()
 
     log_format = "%(asctime)-15s - %(levelname)s - %(message)s"
     logging.basicConfig(stream=sys.stdout, level=logging.DEBUG, format=log_format)
-    logging.config.fileConfig(logfile)
+    logging.config.fileConfig(logConfFile)
     logger = logging.getLogger(__name__)
 
     logger.info('Starting FoscamPing...')
