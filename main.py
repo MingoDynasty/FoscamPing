@@ -154,6 +154,7 @@ class Controller:
         # TODO: probably a better way of doing this
         failedPingResultsCopy = list(failedPingResults)
         for pingResult in failedPingResultsCopy:
+            # TODO: if this is a new device then this will fail... debug required
             prevIsSuccess = latestPingResults[pingResult.device_id].is_success
             if prevIsSuccess is not 1:
                 device = self.getDeviceById(pingResult.device_id)
