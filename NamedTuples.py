@@ -14,3 +14,5 @@ class PingResult(namedtuple('PingResult', 'device_id, date_pinged, packets_sent,
 
 class EmailConf(namedtuple('EmailConf', 'enabled, username, password, server, port, sender_name, send_to')):
     pass
+
+# end NamedTuples
