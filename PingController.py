@@ -33,6 +33,9 @@ class PingController:
             # parse the output and collect additional data from it
             output_decoded = output.decode("utf-8")
             pingResultPojo = self.parse(output_decoded)
+            if not pingResultPojo:
+                self.logger.error("Failed to ping: " + hostname)
+                return None
 
             # extract pojo and put into namedtuple
             pingResult = PingResult(device_id=deviceId,
