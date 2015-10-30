@@ -34,7 +34,10 @@ class PingController:
             output_decoded = output.decode("utf-8")
             pingResultPojo = self.parse(output_decoded)
             if not pingResultPojo:
-                self.logger.error("Failed to ping: " + hostname)
+                # TODO: somehow jump to except clause
+                # raise subprocess.CalledProcessError(output)
+                self.logger.warning("Failed to ping: " + hostname)
+                self.logger.debug("Output: %s" % output)
                 return None
 
             # extract pojo and put into namedtuple
@@ -53,7 +56,7 @@ class PingController:
         # exception is thrown on non-zero exits, so this must mean the command failed
         except subprocess.CalledProcessError as e:
             # TODO: may want to return e object or perhaps just raise and let caller handle the exception
-            self.logger.warning("Failed to ping: " + hostname)
+            self.logger.error("Failed to ping: " + hostname)
             self.logger.debug("Output: %s" % e.output.strip())
             return None
 
