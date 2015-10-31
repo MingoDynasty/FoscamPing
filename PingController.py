@@ -31,7 +31,7 @@ class PingController:
             # entirely possible to get a successful return code but the ping actually failed
             # parse the output and collect additional data from it
             output_decoded = output.decode("utf-8")
-            pingResultPojo = self.parse(output_decoded)
+            pingResultPojo = self.parse(output_decoded, count)
             if not pingResultPojo:
                 # TODO: somehow jump to except clause
                 # raise subprocess.CalledProcessError(output)
@@ -59,14 +59,19 @@ class PingController:
             self.logger.debug("Output: %s" % e.output.strip())
             return None
 
-    def parse(self, ping_output):
+    def parse(self, ping_output, ping_count):
         """
         Parse the ping output.
         :param ping_output: string to parse.
+        :param ping_count: number of times the device was pinged.
         :return: PingResultPojo with ping result data, else None on failure.
         """
-        if 'Destination host unreachable' in ping_output:
+        cnt_dst_host_unreachable = ping_output.count('Destination host unreachable')
+        if cnt_dst_host_unreachable == ping_count:
             self.logger.debug("Destination host was unreachable.")
+            return None
+        elif cnt_dst_host_unreachable > ping_count:
+            self.logger.error("How is this possible? cnt=%s, ping_count=%s" % (cnt_dst_host_unreachable, ping_count))
             return None
 
         # can usually get these
