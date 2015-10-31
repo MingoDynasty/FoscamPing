@@ -15,15 +15,14 @@ class PingController:
         return
 
     # TODO: this function takes in a deviceId for now... but that should not be the case
-    def ping(self, hostname, deviceId):
+    def ping(self, hostname, count, deviceId):
         """
         Ping a host. Note that this implementation may or may not work on non-Windows operating systems.
         :param hostname: hostname to ping
         :return: PingResult on successful ping, else None.
         """
         self.logger.debug("Pinging hostname: " + hostname)
-        # cmd = "ping -n 1 " + hostname  # original command
-        cmd = "ping " + hostname  # original command
+        cmd = "ping -n %d %s" % (count, hostname)  # original command
         cmd_list = shlex.split(cmd)  # split the command in a list
 
         try:

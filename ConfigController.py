@@ -39,6 +39,17 @@ class ConfigController:
         self.logger.info("Loaded config file: " + configfile)
 
     #
+    # Application Section
+    #
+    def getPingCount(self):
+        value = self.config.get('Application', 'ping_count')
+        int_value = int(value)
+        if int_value < 1:
+            self.logger.error("Invalid ping_count: " + value)
+            raise ValueError
+        return int_value
+
+    #
     # Database Section
     #
     def getDbConnectString(self):

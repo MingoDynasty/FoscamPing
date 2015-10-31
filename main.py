@@ -25,6 +25,7 @@ class Controller:
         self.pingController = None
         self.emailController = None
         self.emailConf = None
+        self.pingCount = None
         return
 
     def __del__(self):
@@ -90,6 +91,7 @@ class Controller:
 
         # Get a ping controller instance
         self.pingController = PingController()
+        self.pingCount = self.configController.getPingCount()
 
         # Setup email controller
         self.emailConf = self.configController.getEmailTuple()
@@ -132,7 +134,7 @@ class Controller:
 
             deviceId = self.devices[hostname].device_id
 
-            pingResult = self.pingController.ping(hostname, deviceId)
+            pingResult = self.pingController.ping(hostname, self.pingCount, deviceId)
             if pingResult:
                 successfulPingResults.append(pingResult)
             else:
