@@ -7,6 +7,9 @@ import logging  # Provides access to logging api.
 import logging.config  # Provides access to logging configuration file.
 import time  # Various time-related functions.
 import argparse
+import datetime
+import math
+
 
 from ConfigController import ConfigController
 from PingController import PingController
@@ -148,9 +151,12 @@ class Controller:
         for pingResult in successfulPingResults:
             if pingResult.device_id in latestPingResults:
                 prevIsSuccess = latestPingResults[pingResult.device_id].is_success
+                datePinged = latestPingResults[pingResult.device_id].date_pinged
+                now = datetime.datetime.now()
+                minutesDownFor = math.ceil((now-datePinged).total_seconds()/60)
                 if prevIsSuccess is not 1:
                     device = self.getDeviceById(pingResult.device_id)
-                    self.logger.debug("Host '" + str(device.hostname) + "' was previously down but is now up.")
+                    self.logger.debug("Host '" + str(device.hostname) + "' was previously down for up to " + str(minutesDownFor) + " minutes but is now up.")
                     failsuccessPingResults.append(pingResult)
 
         # Check if this device was previously down and is still down
@@ -181,7 +187,10 @@ class Controller:
 
                 for pingResult in failsuccessPingResults:
                     device = self.getDeviceById(pingResult.device_id)
-                    text += timeNow + ' - Previously down but is now up: ' + device.hostname + "\n"
+                    datePinged = pingResult.date_pinged
+                    now = datetime.datetime.now()
+                    minutesDownFor = math.ceil((now-datePinged).total_seconds()/60)
+                    text += timeNow + ' - Previously down for up to ' + str(minutesDownFor) + ' minutes but is now up: ' + device.hostname + "\n"
 
                 self.emailController.sendEmail(self.emailConf.send_to, subject, text)
 
