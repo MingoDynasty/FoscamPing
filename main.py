@@ -187,7 +187,7 @@ class Controller:
 
                 for pingResult in failsuccessPingResults:
                     device = self.getDeviceById(pingResult.device_id)
-                    datePinged = pingResult.date_pinged
+                    datePinged = latestPingResults[pingResult.device_id].date_pinged
                     now = datetime.datetime.now()
                     minutesDownFor = math.ceil((now-datePinged).total_seconds()/60)
                     text += timeNow + ' - Previously down for up to ' + str(minutesDownFor) + ' minutes but is now up: ' + device.hostname + "\n"
